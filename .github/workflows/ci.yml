@@ -1,0 +1,71 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:  # Enables manual trigger in the Actions tab
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest  # Using Ubuntu as the runner's operating system
+
+    steps:
+      # Step 1: Clone the repository
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      # Step 2: Setup Java (using the latest JDK 17 from Temurin)
+      - name: Setup Java JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'  # Temurin provides prebuilt OpenJDK binaries
+          java-version: '17'       # Use JDK 17 (adjust this if you want another version)
+          cache: maven             # Caches Maven dependencies for faster builds
+
+      # Optional: Install Maven (Ubuntu runners usually include Maven, but this ensures it’s available)
+      - name: Install Maven
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y maven
+
+      # Step 3: Build the project (compiling the source code)
+      - name: Build Project
+        run: |
+          echo "Building the project with Maven..."
+          mvn clean compile
+
+      # Step 4: Run unit tests
+      - name: Run Unit Tests
+        run: |
+          echo "Running unit tests..."
+          mvn test
+
+      # Step 5: Package the application (create a JAR or WAR file)
+      - name: Package Application
+        run: |
+          echo "Packaging application..."
+          mvn package
+
+      # Step 6: Update project code in the repository (e.g., append a timestamp to a log file)
+      - name: Update Project Code
+        env:
+          # The GITHUB_TOKEN is provided automatically and has write permissions
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Making updates to the project code..."
+          # For example, append the current date to a log file named update.log
+          echo "Updated on $(date)" >> update.log
+          # Configure git for committing changes
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          # Stage and commit the change (if there are any modifications)
+          git add update.log
+          git diff --cached --quiet || git commit -m "CI: Update project code with latest build log"
+          # Push changes back to the repository using the provided GITHUB_TOKEN
+          git push origin HEAD:main
+
+      # Step 7: Verification step to confirm workflow execution
+      - name: Verification Step
+        run: echo "CI workflow executed successfully!"
+
