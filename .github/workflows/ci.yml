@@ -1,5 +1,9 @@
 name: CI Pipeline
 
+# Grant the workflow write permissions to repository contents
+permissions:
+  contents: write
+
 on:
   push:
     branches:
