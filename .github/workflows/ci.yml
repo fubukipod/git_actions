@@ -36,18 +36,23 @@ jobs:
 
       # Step 4: Update Project Code (if needed)
       - name: Update Project Code
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          echo "Making updates to the project code..."
-          # Append the current date to update.log (force add since it’s in .gitignore)
-          echo "Updated on $(date)" >> update.log
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
-          git add -f update.log
-          git diff --cached --quiet || git commit -m "CI: Update project code with latest build log"
-          git pull origin main -X union
-          git push origin HEAD:main
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        echo "Making updates to the project code..."
+        # Append the current date to update.log (force-add since it’s in .gitignore)
+        echo "Updated on $(date)" >> update.log
+        git config --global user.name "GitHub Actions"
+        git config --global user.email "actions@github.com"
+        git add -f update.log
+        git diff --cached --quiet || git commit -m "CI: Update project code with latest build log"
+        # Configure pull to use merge (not rebase)
+        git config pull.rebase false
+        # Pull remote changes using merge and the union merge strategy for update.log
+        git pull origin main -X union
+        # Push your changes back to the repository
+        git push origin HEAD:main
+
 
       # Step 5: Verification Step
       - name: Verification Step
