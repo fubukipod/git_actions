@@ -46,6 +46,8 @@ jobs:
           git config --global user.email "actions@github.com"
           git add -f update.log
           git diff --cached --quiet || git commit -m "CI: Update project code with latest build log"
+          # Fetch and rebase remote changes to integrate any remote updates
+          git pull origin main --rebase
           git push origin HEAD:main
 
       # Step 5: Verification Step
